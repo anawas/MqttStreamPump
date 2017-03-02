@@ -21,10 +21,10 @@ import java.util.Date;
 public class KinesisToFirehose {
     // Kinesis Firehose is not available in Frankfurt but only in Ireland (eu-west-1)
     private final String firehoseEndpointURL = "https://firehose.eu-west-1.amazonaws.com";
-    private final String deliveryStreamName = "blogfirehose";
-    private final String deliveryStreamRoleARN = "arn:aws:iam::<AWS Acct Id>:role/firehose_blog_role";
-    private final String targetBucketARN = "arn:aws:s3:::dgraeberaws-blogs";
-    private final String targetPrefix = "blogoutput/";
+    private final String deliveryStreamName = "mqttfirehose";
+    private final String deliveryStreamRoleARN = "arn:aws:iam::563530895636:role/firehose_delivery_role";
+    private final String targetBucketARN = "arn:aws:s3:::brainomad-mqtt-streams";
+    private final String targetPrefix = "messages/";
     private final int intervalInSec = 60;
     private final int buffSizeInMB = 2;
 
