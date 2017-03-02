@@ -6,6 +6,8 @@
 package ch.bbv.application;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,18 +29,37 @@ public class MqttHarvester implements MqttCallback, Runnable {
     String clientId = UUID.randomUUID().toString();
     MqttClient client;
     int qos = 1;
+    final int MAX_BUFFER_SIZE = 100;
+    ArrayList<String> payloads = new ArrayList();
     
     public void connectionLost(Throwable thrwbl) {
         Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "Connection to {0} lost! {1}", new Object[]{this.brokerUrl, thrwbl.getLocalizedMessage()});
         System.exit(-1);
     }
 
+    /**
+     *
+     * @param topic
+     * @param mm
+     * @throws Exception
+     */
     public void messageArrived(String topic, MqttMessage mm) throws Exception {
+        payloads.add(topic + " " + new String(mm.getPayload()));
+        if (payloads.size() == this.MAX_BUFFER_SIZE) {
+            AWSQueuePump pump = new AWSQueuePump();
+            pump.setMessageBuffer(this.payloads);
+            pump.run();
+            //new Thread(pump).start();
+            System.out.println("Writing to Kinesis stream");
+            this.payloads.clear();
+        }
+        /*
         String time = new Timestamp(System.currentTimeMillis()).toString();
         System.out.println("Time:\t" +time +
             "  Topic:\t" + topic + 
             "  Message:\t" + new String(mm.getPayload()) +
-            "  QoS:\t" + mm.getQos());    
+            "  QoS:\t" + mm.getQos());
+        */
     }
 
     public void deliveryComplete(IMqttDeliveryToken imdt) {
