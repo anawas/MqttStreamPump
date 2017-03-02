@@ -75,7 +75,9 @@ public class AWSQueuePump implements Runnable {
         }
 
         putRequest.setRecords(putRecordsRequestEntryList);
-        //PutRecordsResult putRecordsResult = akc.putRecords(putRequest);
-        //System.out.println("Put Result" + putRecordsResult);
+        if (!Debug.ON) {
+            PutRecordsResult putRecordsResult = akc.putRecords(putRequest);
+            System.out.println("Put Result" + putRecordsResult);
+        }
     }
 }
