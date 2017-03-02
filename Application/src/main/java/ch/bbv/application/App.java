@@ -1,7 +1,7 @@
 package ch.bbv.application;
 
 /**
- * Hello world!
+ * Main class.
  *
  */
 public class App 
@@ -9,8 +9,6 @@ public class App
     public static void main( String[] args )
     {
         MqttHarvester harvester = new MqttHarvester();
-        Thread harvesterThread = new Thread(harvester);
-        harvesterThread.run();
-        
-    }
+        new Thread(harvester).start();
+   }
 }
