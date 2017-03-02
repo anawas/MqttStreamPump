@@ -17,9 +17,19 @@ import java.util.ArrayList;
  *
  * @author andreaswassmer
  */
-public class AWSQueuePump {
+public class AWSQueuePump implements Runnable {
 
     static String streamName = "MqttDataStream";
+    
+    // Because region Frankfurt (eu-central-1) does not have the Firehose
+    // service we use the one in Ireland.
+    static Region streamRegion = Region.getRegion(Regions.EU_WEST_1);
+
+    ArrayList<String> messageBuffer = new ArrayList();
+
+    public void setMessageBuffer(ArrayList<String> messageBuffer) {
+        this.messageBuffer = messageBuffer;
+    }
 
     public static void main(String[] main) {
         AWSCredentials credentials = null;
@@ -27,8 +37,7 @@ public class AWSQueuePump {
         credentials = new ProfileCredentialsProvider().getCredentials();
 
         AmazonKinesisClient akc = new AmazonKinesisClient(credentials);
-        Region eucentral1 = Region.getRegion(Regions.EU_CENTRAL_1);
-        akc.setRegion(eucentral1);
+        akc.setRegion(streamRegion);
         PutRecordsRequest putRequest = new PutRecordsRequest();
         putRequest.setStreamName(streamName);
         ArrayList<PutRecordsRequestEntry> putRecordsRequestEntryList = new ArrayList();
@@ -43,5 +52,30 @@ public class AWSQueuePump {
         putRequest.setRecords(putRecordsRequestEntryList);
         PutRecordsResult putRecordsResult = akc.putRecords(putRequest);
         System.out.println("Put Result" + putRecordsResult);
+    }
+
+    public void run() {
+        AWSCredentials credentials = null;
+
+        credentials = new ProfileCredentialsProvider().getCredentials();
+
+        AmazonKinesisClient akc = new AmazonKinesisClient(credentials);
+        akc.setRegion(streamRegion);
+        PutRecordsRequest putRequest = new PutRecordsRequest();
+        putRequest.setStreamName(streamName);
+        ArrayList<PutRecordsRequestEntry> putRecordsRequestEntryList = new ArrayList();
+
+        int i = 0;
+        for (String payload: this.messageBuffer) {
+            if (i % 10 > 0) System.out.println("payload: " + payload);
+            PutRecordsRequestEntry putRecordsRequestEntry = new PutRecordsRequestEntry();
+            putRecordsRequestEntry.setData(ByteBuffer.wrap(payload.getBytes()));
+            putRecordsRequestEntry.setPartitionKey(String.format("partitionKey-%d", i++));
+            putRecordsRequestEntryList.add(putRecordsRequestEntry);
+        }
+
+        putRequest.setRecords(putRecordsRequestEntryList);
+        //PutRecordsResult putRecordsResult = akc.putRecords(putRequest);
+        //System.out.println("Put Result" + putRecordsResult);
     }
 }
